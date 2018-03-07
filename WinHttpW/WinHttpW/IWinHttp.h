@@ -36,7 +36,7 @@ public:
 	 * 快速设置User-Agent浏览器信息 （必须在Open后使用）
 	 * \param UserAgentValue 可空, 留空为：Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2) 
 	 */
-	virtual bool setUserAgent(const string& userAgentValue = "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2)") = 0;
+	virtual void setUserAgent(const string& userAgentValue = "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2)") = 0;
 	/**
 	 * 设置Cookies自动管理模式 （设置后一直有效） （必须在Open前使用）
 	 * \param Index 留空=1
@@ -71,14 +71,14 @@ public:
 	 * \param SendTimeout, 整数型, 可空, 发送超时，单位毫秒 留空=120000(120秒/2分钟)
 	 * \param ReceiveTimeout, 整数型, 可空, 接收超时，单位毫秒 留空=300000(300秒/5分钟) （注意：经测试 接收超时也会影响到POST上传超时）
 	 */
-	virtual bool setTimeouts(int resolveTimeout = 10000, int connectTimeout=15000, int sendTimeout = 120000, int receiveTimeout = 300000) = 0;
+	virtual void setTimeouts(int resolveTimeout = 10000, int connectTimeout=15000, int sendTimeout = 120000, int receiveTimeout = 300000) = 0;
 	//
 	// Headers
 	//
 	/**
 	 * 设置客户端能接受的内容类型，如："application/x-ms-application"
 	 */
-	virtual void setAccept(const string& acceptType) = 0;
+	virtual bool setAccept(const string& acceptType) = 0;
 	/**
 	 * 快速设置SetAccept-Language信息 （必须在Open后使用）
 	 * \param AcceptLanguageValue 可空, 留空为：zh-cn 
