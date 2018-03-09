@@ -44,10 +44,10 @@ public:
 	virtual bool delRequestHeader(const string& header) override;
 	
 	virtual int getStatus() override;
-	virtual string getRespondBody() override;
-	virtual string getRespondHeader(const string& name) override;
-	virtual string getRespondCookies(const string& name) override;
+	virtual string getRespondHeader(const string& header) override;
 	virtual string GetAllResponseHeaders() override;
+	virtual string getRespondBody() override;
+	virtual string getRespondCookies(const string& name) override;
 	virtual string GetAllResponseCookies() override;
 	virtual string GetResponseTextUtf8ToAnsi() override; 
 	

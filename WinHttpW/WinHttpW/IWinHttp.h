@@ -118,13 +118,15 @@ public:
 	virtual int getStatus() = 0;
 	/** 
 	 * 获取服务器返回的内容（原始数据）
+	 * \remark function return the byte array in a HTTP response,it can be a utf-8 string (and of course most of time it is), 
+	 * but it also can be a binary data array (such as a picture,some file or encryped data).
 	 */
 	virtual string getRespondBody() = 0;
 	/** 
-	 * 取得HTTP返回协议头中指定Cookie键的值 （必须在Send后使用）
+	 * 取得HTTP返回协议头 （必须在Send后使用）
 	 * \param Name Cookie键名
 	 */ 
-	virtual string getRespondHeader(const string& name) = 0;
+	virtual string getRespondHeader(const string& header) = 0;
 	/** 
 	 * 取得HTTP返回协议头中指定Cookie键的值 （必须在Send后使用）
 	 * \param Name Cookie键名
@@ -132,6 +134,7 @@ public:
 	virtual string getRespondCookies(const string& name) = 0;
 	/**
 	 * 取得所有HTTP返回协议头 （必须在Send后使用）
+	 * Receives all the headers returned by the server. Each header is separated by a carriage return/line feed (CR/LF) sequence.
 	 */
 	virtual string GetAllResponseHeaders() = 0;
 	/** 
