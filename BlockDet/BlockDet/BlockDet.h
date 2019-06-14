@@ -17,3 +17,8 @@ using namespace boost::asio;
 typedef ip::tcp::socket tcp_socket_type;
 typedef boost::shared_ptr<tcp_socket_type> tcp_socket_ptr;
 
+#ifdef _DEBUG
+#define BASSERT(b) if(!(b)) throw std::logic_error("Assert exception raised.");
+#else
+#define BASSERT
+#endif // _DEBUG

@@ -3,6 +3,7 @@
 #include "boost/make_shared.hpp"
 #include "boost/bind.hpp"
 #include "peer_connection.h"
+#include "boost/thread/recursive_mutex.hpp"
 
 class tcp_server
 {
@@ -37,13 +38,40 @@ private:
 		{
 			return;
 		}
-		peer_connection_ptr conn = boost::make_shared<peer_connection>(sock);
-		
+		peer_connection_ptr conn = boost::make_shared<peer_connection>(sock, boost::bind(&tcp_server::connection_remove, this, _1));
+		boost::recursive_mutex::scoped_lock l(m_mutex_conn_list);
+		m_peer_conns_am_i_blocked.push_back(conn);
 		accept();
+	}
+
+	void connection_remove(peer_connection* ptr)
+	{
+		bool bFindElement = false;
+		boost::recursive_mutex::scoped_lock l(m_mutex_conn_list);
+		for (std::list<peer_connection_ptr>::const_iterator it = m_peer_conns_am_i_blocked.begin(); it != m_peer_conns_am_i_blocked.end(); ++it)
+		{
+			if ((*it).get() == ptr)
+			{
+				if (ptr->get_pending_io_count() == 0)
+				{
+					it = m_peer_conns_am_i_blocked.erase(it);
+					bFindElement = true;		//Debug TEST only. see the `BASSERT(bFindElement)` at the end of function;
+				}
+			}
+			else
+			{
+				//Check other peers
+				if (((*it)->get_is_closed()) && 0 == (*it)->get_pending_io_count())
+				{
+					it = m_peer_conns_am_i_blocked.erase(it);
+				}
+			}
+		}
+		BASSERT(bFindElement);
 	}
 private:
 	io_service m_io;
 	ip::tcp::acceptor m_acceptor;
 	std::list<peer_connection_ptr> m_peer_conns_am_i_blocked;
-	
+	boost::recursive_mutex m_mutex_conn_list;
 };

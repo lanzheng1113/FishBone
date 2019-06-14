@@ -2,6 +2,7 @@
 #include "boost/asio.hpp"
 #include "boost/make_shared.hpp"
 #include "boost/bind.hpp"
+#include "boost/function.hpp"
 
 #define  AMIB_MESSAGE_LENTH 11
 using namespace boost::asio;
@@ -9,6 +10,8 @@ using namespace boost::asio;
 class udp_connect_task;
 class tcp_connect_task;
 
+class peer_connection;
+typedef boost::function<void(peer_connection*)> disconnect_cbk_type;
 //
 //Remote send message:
 //
@@ -27,14 +30,15 @@ class peer_connection
 	: public boost::noncopyable
 {
 public:
-	peer_connection(tcp_socket_ptr sock)
+	peer_connection(tcp_socket_ptr sock, disconnect_cbk_type disconnect_cbk)
+		:m_closed(false),
+		m_sock(sock),
+		pending_io_count(0)
 	{
 		BTrace("~peer_connection()");
 		m_data_max_size = AMIB_MESSAGE_LENTH;
 		m_recv_buffer.resize(m_data_max_size);
 		m_send_buffer.resize(3);
-		m_sock = sock;
-
 		async_read_some();
 	}
 	~peer_connection()
@@ -44,13 +48,35 @@ public:
 
 	void async_read_some()
 	{
+		if(m_closed)
+			return;
 		m_sock->async_read_some(boost::asio::buffer(m_recv_buffer), boost::bind(&peer_connection::read_handler, this, _1, _2));
+		pending_io_count++;
+	}
+
+	//
+	// If the pending IO count on a socket is not 0, we cannot delete this `peer_connection` object, because it may raise a access violation,
+	// since the `read_handler` and `write_handler` is running in IO thread, they will be called when the IO finished.
+	// The best way is process the `timeout` event (which will call shutdown and close too) in `read_handler` and `write_handler` functions.
+	// And it is better to post only one READ/WRITE request on a socket at the same time, it will make easier to control the deleting of `this` object.
+	//
+	int get_pending_io_count()
+	{
+		return pending_io_count;
+	}
+
+	int get_is_closed()
+	{
+		return m_closed;
 	}
 protected:
 	void read_handler(const boost::system::error_code& error, // Result of operation.
 		std::size_t bytes_transferred           // Number of bytes read.
 		)
 	{
+		pending_io_count--;
+		if(m_closed)
+			return;
 		if (error || 0 == bytes_transferred)
 		{
 			shutdown_and_close();
@@ -109,6 +135,7 @@ protected:
 		{
 			// Some data is still on the way.
 			m_sock->async_read_some(boost::asio::buffer(m_recv_buffer), boost::bind(&peer_connection::read_handler, this, _1, _2));
+			pending_io_count++;
 		}
 	}
 
@@ -117,6 +144,9 @@ protected:
 		std::size_t bytes_transferred           // Number of bytes sent.
 		)
 	{
+		pending_io_count--;
+		if(m_closed)
+			return;
 		if (error || bytes_transferred == 0)
 		{
 			shutdown_and_close();
@@ -130,6 +160,7 @@ protected:
 			m_send_buffer = temp;
 			//Send the data left.
 			m_sock->async_send(boost::asio::buffer(m_send_buffer), boost::bind(&peer_connection::write_handler, this, _1, _2));
+			pending_io_count++;
 		}
 		else
 		{
@@ -143,6 +174,8 @@ protected:
 
 	void send_ok()
 	{
+		if(m_closed)
+			return;
 		// 		struct reply
 		// 		{
 		// 			unsigned short length;
@@ -152,11 +185,14 @@ protected:
 		m_send_buffer[1] = 1;
 		m_send_buffer[2] = 0;
 		m_sock->async_send(boost::asio::buffer(m_send_buffer), boost::bind(&peer_connection::write_handler, this, _1, _2));
+		pending_io_count++;
 		return;
 	}
 
 	void send_no()
 	{
+		if(m_closed)
+			return;
 		// 		struct reply
 		// 		{
 		// 			unsigned short length;
@@ -165,14 +201,23 @@ protected:
 		m_send_buffer[0] = 0;
 		m_send_buffer[1] = 1;
 		m_send_buffer[2] = 1;
+		m_sock->async_send(boost::asio::buffer(m_send_buffer), boost::bind(&peer_connection::write_handler, this, _1, _2));
+		pending_io_count++;
 		return;
 	}
 private:
+	//
+	// 必须要保证shutdown_and_close这个函数
+	//
 	void shutdown_and_close()
 	{
+		BASSERT(!m_closed);
 		boost::system::error_code ignored_ec;
 		m_sock->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
 		m_sock->close(ignored_ec);
+		//Note: please make sure this callback is the last function called in this (peer_connection) object.
+		m_disconnect_cbk(this);
+		m_closed = true;
 	}
 private:
 	std::vector<char> m_recv_buffer;		//The buffer used to read.
@@ -182,6 +227,9 @@ private:
 	int m_data_max_size;
 	boost::shared_ptr<udp_connect_task> t_udp;
 	boost::shared_ptr<tcp_connect_task> t_tcp;
+	disconnect_cbk_type m_disconnect_cbk;
+	bool m_closed;
+	int pending_io_count;
 };
 
 typedef boost::shared_ptr<peer_connection> peer_connection_ptr;
