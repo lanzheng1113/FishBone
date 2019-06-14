@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include "BlockDet.h"
 #include "tcp_server.h"
 
 int main()

@@ -30,6 +30,12 @@
     <ClInclude Include="tcp_server.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="BlockDet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="block_detect_task.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
