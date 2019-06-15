@@ -57,7 +57,7 @@ private:
 		std::size_t bytes_transferred           // Number of bytes received.
 		)
 	{
-		if (error || bytes_transferred)
+		if (error || bytes_transferred == 0)
 		{
 			std::cout << "error: " << error << ". Bytes: " << bytes_transferred << std::endl;
 			close();
@@ -81,9 +81,9 @@ private:
 		std::size_t bytes_transferred           // Number of bytes sent.
 		)
 	{
-		if (error || bytes_transferred <= 0)
+		if (error || bytes_transferred == 0)
 		{
-			std::cout << "error:" << error << ". Bytes:" << bytes_transferred << std::endl;
+			std::cout << "error:" << error << "." << error.message() << ". Bytes:" << bytes_transferred << std::endl;
 			close();
 			return;
 		}
