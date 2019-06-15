@@ -3,6 +3,7 @@
 #include "boost/make_shared.hpp"
 #include "boost/bind.hpp"
 #include "boost/function.hpp"
+#include "boost/enable_shared_from_this.hpp"
 
 #define  AMIB_MESSAGE_LENTH 11
 using namespace boost::asio;
@@ -11,7 +12,11 @@ class udp_connect_task;
 class tcp_connect_task;
 
 class peer_connection;
-typedef boost::function<void(peer_connection*)> disconnect_cbk_type;
+
+typedef boost::shared_ptr<peer_connection> peer_connection_ptr;
+
+typedef boost::function<void(peer_connection_ptr)> disconnect_cbk_type;
+
 //
 //Remote send message:
 //
@@ -26,8 +31,9 @@ typedef boost::function<void(peer_connection*)> disconnect_cbk_type;
 // 			}_msg;
 //       }
 // 	
-class peer_connection
-	: public boost::noncopyable
+class peer_connection : 
+	public boost::noncopyable,
+	public boost::enable_shared_from_this<peer_connection>
 {
 public:
 	peer_connection(tcp_socket_ptr sock, disconnect_cbk_type disconnect_cbk)
@@ -103,12 +109,15 @@ protected:
 		//
 		// reserved, process time out.
 		//
+#ifdef _DEBUG
 		if (0)
 		{
 			shutdown_and_close();
 			return;
 		}
-
+#else
+		throw std::logic_error("reserved for timeout.");
+#endif
 		//assert(m_recv_buffer.size() <= m_data_max_size)
 
 		m_data_received.insert(m_data_received.end(), m_recv_buffer.begin(), m_recv_buffer.end());
@@ -141,6 +150,10 @@ protected:
 			//     get_ip()
 			//     new_task((id)h_socket, ip, tcp_port_to_detect, udp_port_to_detect, boost::bind(send_ok,this), boost::bind(send_no,this)); 
 			//
+			ip::tcp::endpoint ep_remote = m_sock->remote_endpoint();
+			ip::address addr = ep_remote.address();
+			
+			
 
 			LOG_INFO("[%08x]The connection receiving handler data received.", (unsigned int)this);
 			//
@@ -259,7 +272,7 @@ private:
 		m_sock->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
 		m_sock->close(ignored_ec);
 		//Note: please make sure this callback is the last function called in this (peer_connection) object.
-		m_disconnect_cbk(this);
+		m_disconnect_cbk(shared_from_this());
 		m_closed = true;
 	}
 private:
@@ -275,5 +288,4 @@ private:
 	int pending_io_count;
 };
 
-typedef boost::shared_ptr<peer_connection> peer_connection_ptr;
 

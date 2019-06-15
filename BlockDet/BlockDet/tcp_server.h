@@ -45,17 +45,17 @@ private:
 		accept();
 	}
 
-	void connection_remove(peer_connection* ptr)
+	void connection_remove(peer_connection_ptr ptr)
 	{
 		bool bFindElement = false;
 		boost::recursive_mutex::scoped_lock l(m_mutex_conn_list);
 		for (std::list<peer_connection_ptr>::const_iterator it = m_peer_conns_am_i_blocked.begin(); it != m_peer_conns_am_i_blocked.end();)
 		{
-			if ((*it).get() == ptr)
+			if ((*it) == ptr)
 			{
 				if (ptr->get_pending_io_count() == 0)
 				{
-					LOG_INFO("connection object: %08x has been removed (IMM).\n", (unsigned int)ptr);
+					LOG_INFO("connection object: %08x has been removed (IMM).\n", (unsigned int)ptr.get());
 					it = m_peer_conns_am_i_blocked.erase(it);
 					bFindElement = true;		//Debug TEST only. see the `BASSERT(bFindElement)` at the end of function;
 				}
