@@ -120,6 +120,7 @@ private:
 
 	void tcp_connect_handler(const boost::system::error_code& ec)
 	{
+		boost::recursive_mutex::scoped_lock l(m_mutex);
 		if (m_abort)
 		{
 			//The socket has been closed when `abort` is called .
@@ -129,7 +130,6 @@ private:
 			check_notify();
 		}
 
-		boost::recursive_mutex::scoped_lock l(m_mutex);
 		if (ec)
 		{
 			LOG_INFO("pingpong_task [%08x] tcp connect failed with error:%d(%s)", (unsigned int)this, ec.value(), ec.message().c_str());
