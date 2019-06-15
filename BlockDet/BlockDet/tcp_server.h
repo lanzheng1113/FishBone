@@ -39,7 +39,7 @@ private:
 			return;
 		}
 		LOG_INFO("SOCKET: %u Connected.\n",(unsigned int)sock->native_handle());
-		peer_connection_ptr conn = boost::make_shared<peer_connection>(sock, boost::bind(&tcp_server::connection_remove, this, _1));
+		peer_connection_ptr conn = boost::make_shared<peer_connection>(sock, boost::bind(&tcp_server::connection_remove, this, _1), m_io);
 		boost::recursive_mutex::scoped_lock l(m_mutex_conn_list);
 		m_peer_conns_am_i_blocked.push_back(conn);
 		accept();
