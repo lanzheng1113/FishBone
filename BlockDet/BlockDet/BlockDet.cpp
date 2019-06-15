@@ -10,8 +10,44 @@
 #include <sstream>
 #endif
 
+#ifdef _WIN32
+#include <DbgHelp.h>
+#pragma comment(lib, "DbgHelp.lib")
+
+LONG WINAPI DumpMiniDump(PEXCEPTION_POINTERS excpInfo)
+{
+	HANDLE hFile = CreateFile(_T("CrashDump.dmp"),
+		GENERIC_READ | GENERIC_WRITE,
+		0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	MINIDUMP_EXCEPTION_INFORMATION eInfo;
+	eInfo.ThreadId = GetCurrentThreadId(); //把需要的信息添进去
+	eInfo.ExceptionPointers = excpInfo;
+	eInfo.ClientPointers = FALSE;
+
+	// 调用, 生成Dump. 98不支持
+	// Dump的类型是小型的, 节省空间. 可以参考MSDN生成更详细的Dump.
+	MiniDumpWriteDump(
+		GetCurrentProcess(),
+		GetCurrentProcessId(),
+		hFile,
+		MiniDumpNormal,
+		excpInfo ? &eInfo : NULL,
+		NULL,
+		NULL);
+
+	CloseHandle(hFile);
+
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+#endif // _WIN32
+
+
 int main()
 {
+#ifdef _WIN32
+	SetUnhandledExceptionFilter(DumpMiniDump);
+#endif
 	//
 	//监听3999端口
 	//
