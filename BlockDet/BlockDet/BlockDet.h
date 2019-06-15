@@ -10,6 +10,23 @@
 #endif // _DEBUG
 #endif
 
+#ifdef _WIN32
+#ifdef LOG_ENABLED
+#include "util/logger.h"
+#else
+#define LOG_ERROR
+#define LOG_INFO
+#define LOG_DEBUG
+#define LOG_FATAL
+#endif // LOG_ENABLED
+#else
+#define LOG_ERROR
+#define LOG_INFO
+#define LOG_DEBUG
+#define LOG_FATAL
+#endif // _WIN32
+
+
 #include "boost/asio.hpp"
 
 using namespace boost::asio;

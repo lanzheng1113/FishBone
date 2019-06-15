@@ -38,6 +38,7 @@ private:
 		{
 			return;
 		}
+		LOG_INFO("SOCKET: %u Connected.\n",(unsigned int)sock->native_handle());
 		peer_connection_ptr conn = boost::make_shared<peer_connection>(sock, boost::bind(&tcp_server::connection_remove, this, _1));
 		boost::recursive_mutex::scoped_lock l(m_mutex_conn_list);
 		m_peer_conns_am_i_blocked.push_back(conn);
@@ -54,6 +55,7 @@ private:
 			{
 				if (ptr->get_pending_io_count() == 0)
 				{
+					LOG_INFO("SOCKET: %u was disconnected and the connection object wrap it has been removed (IMM).\n", ptr->get_sock()->native_handle());
 					it = m_peer_conns_am_i_blocked.erase(it);
 					bFindElement = true;		//Debug TEST only. see the `BASSERT(bFindElement)` at the end of function;
 				}
@@ -63,9 +65,14 @@ private:
 				//Check other peers
 				if (((*it)->get_is_closed()) && 0 == (*it)->get_pending_io_count())
 				{
+					LOG_INFO("SOCKET: %u was disconnected and the connection object wrap it has been removed (DELAY).\n", ptr->get_sock()->native_handle());
 					it = m_peer_conns_am_i_blocked.erase(it);
 				}
 			}
+		}
+		if (!bFindElement)
+		{
+			LOG_ERROR("ERROR! The object which wrapping SOCKET %u was not Found\n", (unsigned int)(ptr->get_sock()->native_handle()));
 		}
 		BASSERT(bFindElement);
 	}

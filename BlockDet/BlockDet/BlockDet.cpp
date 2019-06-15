@@ -4,12 +4,24 @@
 #include "stdafx.h"
 #include "BlockDet.h"
 #include "tcp_server.h"
+#ifdef LOG_ENABLED
+#include "util/Path.h"
+#include "util/DateTime.h"
+#include <sstream>
+#endif
 
 int main()
 {
 	//
 	//¼àÌý3999¶Ë¿Ú
 	//
+#ifdef LOG_ENABLED
+	DateTime dt;
+	std::stringstream ss;
+	ss << Path::getApplicationDirPath() << "log_" << dt.getYear() << dt.getMonth() << dt.getDay() << dt.getHour() << dt.getMinute() << dt.getSecond() << ".txt";
+	Logger::getInstance()->setLogFileName(ss.str());
+#endif // #ifdef LOG_ENABLED
+
 	tcp_server s;
 	s.run();
     return 0;
