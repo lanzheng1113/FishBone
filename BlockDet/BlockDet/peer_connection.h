@@ -33,9 +33,10 @@ public:
 	peer_connection(tcp_socket_ptr sock, disconnect_cbk_type disconnect_cbk)
 		:m_closed(false),
 		m_sock(sock),
-		pending_io_count(0)
+		pending_io_count(0),
+		m_disconnect_cbk(disconnect_cbk)
 	{
-		LOG_INFO("[%u]peer_connection().\n", m_sock->native_handle());
+		LOG_INFO("[%08x]peer_connection() with [s:%u].\n", (unsigned int)this, m_sock->native_handle());
 		BTrace("~peer_connection()");
 		m_data_max_size = AMIB_MESSAGE_LENTH;
 		m_recv_buffer.resize(m_data_max_size);
@@ -44,7 +45,7 @@ public:
 	}
 	~peer_connection()
 	{
-		LOG_INFO("[%u]~peer_connection().\n", m_sock->native_handle());
+		LOG_INFO("[%08x]~peer_connection().\n", (unsigned int)this);
 		BTrace("~peer_connection()");
 	}
 
@@ -52,12 +53,12 @@ public:
 	{
 		if (m_closed)
 		{
-			LOG_INFO("Async-READ-request is not delivered, because the socket has closed.\n");
+			LOG_INFO("[%08x]Async-READ-request is not delivered, because the socket has closed.\n", (unsigned int)this);
 			return;
 		}
 		m_sock->async_read_some(boost::asio::buffer(m_recv_buffer), boost::bind(&peer_connection::read_handler, this, _1, _2));
 		pending_io_count++;
-		LOG_INFO("An async-READ-request is delivered, the IO count is %d now\n", pending_io_count);
+		LOG_INFO("[%08x]An async-READ-request is delivered, the IO count is %d now\n", (unsigned int)this, pending_io_count);
 	}
 
 	//
@@ -88,14 +89,14 @@ protected:
 		pending_io_count--;
 		if (m_closed)
 		{
-			LOG_ERROR("[s:%u] received handle return. the connecting is closed (or closing).\n", (unsigned int)m_sock->native_handle());
+			LOG_ERROR("[%08x] received handle return. the connecting is closed (or closing).\n", (unsigned int)this);
 			return;
 		}
 
 		if (error || 0 == bytes_transferred)
 		{
-			LOG_ERROR("[s:%u]The connection receiving handler get a error: %d [%s], bytes transferred %u\n", 
-				(unsigned int)m_sock->native_handle(), error.value(), error.message().c_str(), bytes_transferred);
+			LOG_ERROR("[%08x]The connection receiving handler get a error: %d [%s], bytes transferred %u\n", 
+				(unsigned int)this, error.value(), error.message().c_str(), bytes_transferred);
 			shutdown_and_close();
 			return;
 		}
@@ -114,8 +115,8 @@ protected:
 
 		if (m_data_received.size() > (size_t)m_data_max_size)
 		{
-			LOG_ERROR("[s:%u]The connection receiving handler get a data oversize error, max size or want size is %d but got %d.\n", 
-				(unsigned int)m_sock->native_handle(), m_data_max_size, m_data_received.size());
+			LOG_ERROR("[%08x]The connection receiving handler get a data oversize error, max size or want size is %d but got %d.\n", 
+				(unsigned int)this, m_data_max_size, m_data_received.size());
 			shutdown_and_close();
 			return;
 		}
@@ -132,7 +133,7 @@ protected:
 				&& (m_data_received[2] == 'A' && m_data_received[3] == 'M' && m_data_received[4] == 'I' && m_data_received[5] == 'B' && m_data_received[6] == 0)
 				&& tcp_port != 0 && udp_port != 0))
 			{
-				LOG_ERROR("[s:%u]The connection receiving handler got a data format error.", (unsigned int)m_sock->native_handle());
+				LOG_ERROR("[%08x]The connection receiving handler got a data format error.", (unsigned int)this);
 				shutdown_and_close();
 				return;
 			}
@@ -141,7 +142,7 @@ protected:
 			//     new_task((id)h_socket, ip, tcp_port_to_detect, udp_port_to_detect, boost::bind(send_ok,this), boost::bind(send_no,this)); 
 			//
 
-			LOG_INFO("[s:%u]The connection receiving handler data received.", (unsigned int)m_sock->native_handle());
+			LOG_INFO("[%08x]The connection receiving handler data received.", (unsigned int)this);
 			//
 			// Here is the testing code.
 			//
@@ -155,8 +156,8 @@ protected:
 		else
 		{
 			// Some data is still on the way.
-			LOG_ERROR("[s:%u]The connection receiving handler: some data is still on the way, %d bytes want %d bytes received.\n", 
-				(unsigned int)m_sock->native_handle(), m_data_max_size, m_data_received.size());
+			LOG_ERROR("[%08x]The connection receiving handler: some data is still on the way, %d bytes want %d bytes received.\n", 
+				(unsigned int)this, m_data_max_size, m_data_received.size());
 			m_recv_buffer.clear();
 			m_recv_buffer.resize(m_data_max_size);
 			m_sock->async_read_some(boost::asio::buffer(m_recv_buffer), boost::bind(&peer_connection::read_handler, this, _1, _2));
@@ -172,14 +173,14 @@ protected:
 		pending_io_count--;
 		if (m_closed)
 		{
-			LOG_ERROR("[s:%u] write handle return. the connecting is closed (or closing).\n", (unsigned int)m_sock->native_handle()); 
+			LOG_ERROR("[%08x] write handle return. the connecting is closed (or closing).\n", (unsigned int)this); 
 			return;
 		}
 			
 		if (error || bytes_transferred == 0)
 		{
-			LOG_ERROR("[s:%u]The connection receiving handler get a error: %d [%s] bytes transferred %u\n", 
-				(unsigned int)m_sock->native_handle(), error.value(), error.message().c_str(), bytes_transferred);
+			LOG_ERROR("[%08x]The connection receiving handler get a error: %d [%s] bytes transferred %u\n", 
+				(unsigned int)this, error.value(), error.message().c_str(), bytes_transferred);
 			shutdown_and_close();
 			return;
 		}
@@ -187,7 +188,7 @@ protected:
 		//assert(bytes_transferred <= m_send_buffer.size())
 		if (bytes_transferred != m_send_buffer.size())
 		{
-			LOG_INFO("[s:%u]The `ACK` has partly sent, total %d send %u.\n", (unsigned int)m_sock->native_handle(), m_send_buffer.size(), bytes_transferred);
+			LOG_INFO("[%08x]The `ACK` has partly sent, total %d send %u.\n", (unsigned int)this, m_send_buffer.size(), bytes_transferred);
 			std::vector<char> temp(m_send_buffer.begin() + bytes_transferred, m_send_buffer.end());
 			m_send_buffer = temp;
 			//Send the data left.
@@ -200,7 +201,7 @@ protected:
 			//All of the data has been sent.
 			//Just shutdown and close the socket.
 			//
-			LOG_INFO("[s:%u]The `ACK` had been sent.\n", (unsigned int)m_sock->native_handle());
+			LOG_INFO("[%08x]The `ACK` had been sent.\n", (unsigned int)this);
 			shutdown_and_close();
 		}
 	}
@@ -209,7 +210,7 @@ protected:
 	{
 		if (m_closed)
 		{
-			LOG_INFO("[s:%u]The connection had been closed, abort sending `ACK-Ok`\n", (unsigned int)m_sock->native_handle());
+			LOG_INFO("[%08x]The connection had been closed, abort sending `ACK-Ok`\n", (unsigned int)this);
 			return;
 		}
 		// 		struct reply
@@ -222,7 +223,7 @@ protected:
 		m_send_buffer[2] = 0;
 		m_sock->async_send(boost::asio::buffer(m_send_buffer), boost::bind(&peer_connection::write_handler, this, _1, _2));
 		pending_io_count++;
-		LOG_INFO("[s:%u]The `ACK-Yes` is sending.\n", (unsigned int)m_sock->native_handle());
+		LOG_INFO("[%08x]The `ACK-Yes` is sending.\n", (unsigned int)this);
 		return;
 	}
 
@@ -253,13 +254,13 @@ private:
 	void shutdown_and_close()
 	{
 		BASSERT(!m_closed);
+		LOG_INFO("[%08x]Closing connection.\n", (unsigned int)this);
 		boost::system::error_code ignored_ec;
 		m_sock->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
 		m_sock->close(ignored_ec);
 		//Note: please make sure this callback is the last function called in this (peer_connection) object.
 		m_disconnect_cbk(this);
 		m_closed = true;
-		LOG_INFO("[s:%u]The connection has been closed.\n", (unsigned int)m_sock->native_handle());
 	}
 private:
 	std::vector<char> m_recv_buffer;		//The buffer used to read.
