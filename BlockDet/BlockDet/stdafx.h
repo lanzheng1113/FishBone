@@ -1,15 +1,18 @@
-// stdafx.h : 标准系统包含文件的包含文件，
-// 或是经常使用但不常更改的
-// 特定于项目的包含文件
+// stdafx.h : 锟斤拷准系统锟斤拷锟斤拷锟侥硷拷锟侥帮拷锟斤拷锟侥硷拷锟斤拷
+// 锟斤拷锟角撅拷锟斤拷使锟矫碉拷锟斤拷锟斤拷锟斤拷锟侥碉拷
+// 锟截讹拷锟斤拷锟斤拷目锟侥帮拷锟斤拷锟侥硷拷
 //
 
 #pragma once
 
+#ifdef _WIN32
 #include "targetver.h"
-
 #include <stdio.h>
 #include <tchar.h>
+#else
+#include <stdio.h>
+#endif
 
 
 
-// TODO:  在此处引用程序需要的其他头文件
+// TODO:  锟节此达拷锟斤拷锟矫筹拷锟斤拷锟斤拷要锟斤拷锟斤拷锟斤拷头锟侥硷拷

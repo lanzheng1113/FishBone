@@ -3,10 +3,14 @@
 #ifdef _WIN32
 #ifdef _DEBUG
 #define BTrace OutputDebugStringA
+#else
+#define BTrace
 #endif // _DEBUG
 #else
 #ifdef _DEBUG
 #define BTrace printf
+#else
+#define BTrace
 #endif // _DEBUG
 #endif
 
@@ -18,12 +22,14 @@
 #define LOG_INFO
 #define LOG_DEBUG
 #define LOG_FATAL
+#define LOG_WARN
 #endif // LOG_ENABLED
 #else
 #define LOG_ERROR
 #define LOG_INFO
 #define LOG_DEBUG
 #define LOG_FATAL
+#define LOG_WARN
 #endif // _WIN32
 
 

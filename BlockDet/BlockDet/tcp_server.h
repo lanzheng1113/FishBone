@@ -4,6 +4,7 @@
 #include "boost/bind.hpp"
 #include "peer_connection.h"
 #include "boost/thread/recursive_mutex.hpp"
+#include <list>
 
 class tcp_server
 {
@@ -22,7 +23,7 @@ public:
 		m_io.run(ec);
 		if (ec.value() != 0)
 		{
-			throw std::exception(ec.message().c_str());
+			throw std::logic_error(ec.message().c_str());
 		}
 	}
 private:
@@ -49,7 +50,7 @@ private:
 	{
 		bool bFindElement = false;
 		boost::recursive_mutex::scoped_lock l(m_mutex_conn_list);
-		for (std::list<peer_connection_ptr>::const_iterator it = m_peer_conns_am_i_blocked.begin(); it != m_peer_conns_am_i_blocked.end();)
+		for (std::list<peer_connection_ptr>::iterator it = m_peer_conns_am_i_blocked.begin(); it != m_peer_conns_am_i_blocked.end();)
 		{
 			if ((*it) == ptr)
 			{
@@ -59,7 +60,7 @@ private:
 					&& ptr->get_is_watch_dog_finish_work()
 					)
 				{
-					LOG_INFO("connection object: %08x has been removed (IMM).", (unsigned int)ptr.get());
+					LOG_INFO("connection object: %08x has been removed (IMM).", ptr.get());
 					it = m_peer_conns_am_i_blocked.erase(it);
 				}
 				else
@@ -75,7 +76,7 @@ private:
 					&& (((*it)->get_is_pingpong_task_started() && (*it)->get_is_pingpong_task_finished()) || !(*it)->get_is_pingpong_task_started()))
 				{
 					// and if the `ping-pong` task which base on the connection has been finished, or not started yet (many reason cause that, such as invalid request from client, or an unexpected network error).
-					LOG_INFO("connection object: %08x has been removed (DELAY).", (unsigned int)(*it).get());
+					LOG_INFO("connection object: %08x has been removed (DELAY).", (*it).get());
 					it = m_peer_conns_am_i_blocked.erase(it);
 				}
 				else
@@ -84,7 +85,7 @@ private:
 		}
 		if (!bFindElement)
 		{
-			LOG_ERROR("ERROR! The object [%08x] was not Found", (unsigned int)(ptr.get()));
+			LOG_ERROR("ERROR! The object [%08x] was not Found", (ptr.get()));
 		}
 		BASSERT(bFindElement);
 	}

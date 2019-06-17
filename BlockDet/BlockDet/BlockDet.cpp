@@ -1,4 +1,4 @@
-// BlockDet.cpp : ¶¨Òå¿ØÖÆÌ¨Ó¦ÓÃ³ÌÐòµÄÈë¿Úµã¡£
+// BlockDet.cpp : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¨Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµã¡£
 //
 
 #include "stdafx.h"
@@ -21,12 +21,12 @@ LONG WINAPI DumpMiniDump(PEXCEPTION_POINTERS excpInfo)
 		0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	MINIDUMP_EXCEPTION_INFORMATION eInfo;
-	eInfo.ThreadId = GetCurrentThreadId(); //°ÑÐèÒªµÄÐÅÏ¢Ìí½øÈ¥
+	eInfo.ThreadId = GetCurrentThreadId(); //ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½È¥
 	eInfo.ExceptionPointers = excpInfo;
 	eInfo.ClientPointers = FALSE;
 
-	// µ÷ÓÃ, Éú³ÉDump. 98²»Ö§³Ö
-	// DumpµÄÀàÐÍÊÇÐ¡ÐÍµÄ, ½ÚÊ¡¿Õ¼ä. ¿ÉÒÔ²Î¿¼MSDNÉú³É¸üÏêÏ¸µÄDump.
+	// ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Dump. 98ï¿½ï¿½Ö§ï¿½ï¿½
+	// Dumpï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½Íµï¿½, ï¿½ï¿½Ê¡ï¿½Õ¼ï¿½. ï¿½ï¿½ï¿½Ô²Î¿ï¿½MSDNï¿½ï¿½ï¿½É¸ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½Dump.
 	MiniDumpWriteDump(
 		GetCurrentProcess(),
 		GetCurrentProcessId(),
@@ -49,7 +49,7 @@ int main()
 	SetUnhandledExceptionFilter(DumpMiniDump);
 #endif
 	//
-	//¼àÌý3999¶Ë¿Ú
+	//ï¿½ï¿½ï¿½ï¿½3999ï¿½Ë¿ï¿½
 	//
 #ifdef LOG_ENABLED
 	DateTime dt;
@@ -59,17 +59,24 @@ int main()
 #endif // #ifdef LOG_ENABLED
 
 	tcp_server s;
-	s.run();
+        try{
+            s.run();
+        }
+        catch(std::exception& e)
+        {
+            printf("error: %s",e.what());
+        }
+	
     return 0;
 }
 // 
 // /**
-// * ¿Í»§¶ËµÄÇëÇó
+// * ï¿½Í»ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½
 // */
 // struct CLIENT_REQUEST
 // {
 // 	boost::asio::ip::address a;
-// 	boost::asio::ip::tcp::socket sock_tcp;	//TCPµÄÁ¬½Ó
+// 	boost::asio::ip::tcp::socket sock_tcp;	//TCPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 // 	unsigned short tcp_port;
 // 	boost::asio::ip::udp::socket sock_udp;
 // 	unsigned short udp_port;
@@ -78,7 +85,7 @@ int main()
 // #include "boost/function.hpp"
 // #include <vector>
 // //
-// // Ò»¸öÏß³Ì£¬ÓÃÓÚ´¦ÀíÒì²½Á¬½Ótcp
+// // Ò»ï¿½ï¿½ï¿½ß³Ì£ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ì²½ï¿½ï¿½ï¿½ï¿½tcp
 // //
 // bool exit_flag = false;
 // typedef boost::function<void()> AsyncConnectTask;
@@ -87,7 +94,7 @@ int main()
 // 
 // void peer_connection::async_connect_tcp(boost::asio::ip::address addr, unsigned short port)
 // {
-// 	// Èç¹ûµ±Ç°Á¬½ÓÊý³¬³öÁËÔ¤ÉèµÄ×î´óµÄTCPÁ¬½ÓÊý£¬ÔòÖ´ÐÐÊ§°Ü¡£
+// 	// ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½TCPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½Ê§ï¿½Ü¡ï¿½
 // 	if (out_of_quota())
 // 	{
 // 		int error_code = err_out_of_quote;
@@ -113,15 +120,15 @@ int main()
 // 	{
 // 		
 // 	}
-// 	//¹Ø±ÕËùÓÐÎ´ÊÍ·ÅµÄÁ¬½Ó
+// 	//ï¿½Ø±ï¿½ï¿½ï¿½ï¿½ï¿½Î´ï¿½Í·Åµï¿½ï¿½ï¿½ï¿½ï¿½
 // 	return;
 // }
-// // Ò»¸öÏß³Ì£¬ÓÃÓÚ´¦ÀíÒì²½·¢ËÍUDPÇëÇó
+// // Ò»ï¿½ï¿½ï¿½ß³Ì£ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ì²½ï¿½ï¿½ï¿½ï¿½UDPï¿½ï¿½ï¿½ï¿½
 // 
 // 
 // 
 // /**
-//  * ½«¿Í»§¶ËµÄsocketÁ¬½ÓºÍ¿Í»§¶ËµÄÇëÇó°ó¶¨Ò»¿é×ö¸öÓ³Éä¡£
-//  * µ±³¬Ê±»òÕßÍê³ÉÈÎÎñ¶Ï¿ªÕâ¸öÁ¬½ÓµÄÊ±ºò£¬½«
+//  * ï¿½ï¿½ï¿½Í»ï¿½ï¿½Ëµï¿½socketï¿½ï¿½ï¿½ÓºÍ¿Í»ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½ä¡£
+//  * ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½Ê±ï¿½ò£¬½ï¿½
 //  */
 // typedef std::map<boost::asio::ip::tcp::socket, CLIENT_REQUEST> CLIENT_REQUEST_MAP;
