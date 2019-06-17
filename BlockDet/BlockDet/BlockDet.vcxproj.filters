@@ -47,5 +47,8 @@
     <ClCompile Include="peer_connection.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="block_detect_task.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

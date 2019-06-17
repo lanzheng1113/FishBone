@@ -38,7 +38,7 @@ private:
 		{
 			return;
 		}
-		LOG_INFO("SOCKET: %u Connected.\n",(unsigned int)sock->native_handle());
+		LOG_INFO("SOCKET: %u Connected.",(unsigned int)sock->native_handle());
 		peer_connection_ptr conn = boost::make_shared<peer_connection>(sock, boost::bind(&tcp_server::connection_remove, this, _1), m_io);
 		boost::recursive_mutex::scoped_lock l(m_mutex_conn_list);
 		m_peer_conns_am_i_blocked.push_back(conn);
@@ -53,21 +53,29 @@ private:
 		{
 			if ((*it) == ptr)
 			{
-				if (ptr->get_pending_io_count() == 0)
+				bFindElement = true;		//Debug TEST only. see the `BASSERT(bFindElement)` at the end of function;
+				if ((ptr->get_pending_io_count() == 0) 
+					&& (((*it)->get_is_pingpong_task_started() && (*it)->get_is_pingpong_task_finished()) || !(*it)->get_is_pingpong_task_started())
+					&& ptr->get_is_watch_dog_finish_work()
+					)
 				{
-					LOG_INFO("connection object: %08x has been removed (IMM).\n", (unsigned int)ptr.get());
+					LOG_INFO("connection object: %08x has been removed (IMM).", (unsigned int)ptr.get());
 					it = m_peer_conns_am_i_blocked.erase(it);
-					bFindElement = true;		//Debug TEST only. see the `BASSERT(bFindElement)` at the end of function;
 				}
 				else
 					++it;
 			}
 			else
 			{
-				//Check other peers
-				if (((*it)->get_is_closed()) && 0 == (*it)->get_pending_io_count())
+				// Check other peers
+				// if `peer-connection` is closed, and no pending io on the closed socket.
+				if (((*it)->get_is_closed()) 
+					&& 0 == (*it)->get_pending_io_count()
+					&& (*it)->get_is_watch_dog_finish_work()
+					&& (((*it)->get_is_pingpong_task_started() && (*it)->get_is_pingpong_task_finished()) || !(*it)->get_is_pingpong_task_started()))
 				{
-					LOG_INFO("connection object: %08x has been removed (DELAY).\n", (unsigned int)(*it).get());
+					// and if the `ping-pong` task which base on the connection has been finished, or not started yet (many reason cause that, such as invalid request from client, or an unexpected network error).
+					LOG_INFO("connection object: %08x has been removed (DELAY).", (unsigned int)(*it).get());
 					it = m_peer_conns_am_i_blocked.erase(it);
 				}
 				else
@@ -76,7 +84,7 @@ private:
 		}
 		if (!bFindElement)
 		{
-			LOG_ERROR("ERROR! The object which wrapping SOCKET %u was not Found\n", (unsigned int)(ptr->get_sock()->native_handle()));
+			LOG_ERROR("ERROR! The object [%08x] was not Found", (unsigned int)(ptr.get()));
 		}
 		BASSERT(bFindElement);
 	}
