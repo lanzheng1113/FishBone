@@ -1,9 +1,7 @@
-// BlockDet.cpp : �������̨Ӧ�ó������ڵ㡣
-//
-
 #include "stdafx.h"
 #include "BlockDet.h"
 #include "tcp_server.h"
+
 #ifdef LOG_ENABLED
 #include "util/Path.h"
 #include "util/DateTime.h"
