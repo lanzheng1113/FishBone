@@ -10,8 +10,8 @@ class CAsioTCPClient
 	typedef ip::tcp::socket socket_type;
 	typedef boost::shared_ptr<socket_type> sock_ptr;
 public:
-	CAsioTCPClient(io_service& io)
-		: m_ep(ip::address::from_string("127.0.0.1"), 6688)
+	CAsioTCPClient(io_service& io, const boost::asio::ip::address& addr)
+		: m_ep(addr, 6688)
 		, m_io(io)
 	{
 		*(unsigned short*)m_send_buf = 9;
@@ -39,7 +39,7 @@ private:
 	{
 		if (ec)
 		{
-			std::cout << "connect failed with error:" << ec << std::endl;
+			std::cout << "connect failed with error:" << ec << "(" << ec.message() << ")" << std::endl;
 			close();
 			return;
 		}
