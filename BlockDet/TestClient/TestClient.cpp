@@ -1,6 +1,3 @@
-// TestClient.cpp : �������̨Ӧ�ó������ڵ㡣
-//
-
 #include "stdafx.h"
 #include "AsioTCPClient.h"
 #include "boost/thread.hpp"
