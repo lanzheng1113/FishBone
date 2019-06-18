@@ -4,6 +4,7 @@
 #include "boost/bind.hpp"
 #include "peer_connection.h"
 #include "boost/thread/recursive_mutex.hpp"
+#include "boost/thread.hpp"
 #include <list>
 
 class tcp_server
@@ -13,6 +14,7 @@ public:
 	tcp_server()
 		:m_acceptor(m_io, ip::tcp::endpoint(ip::tcp::v4(), 6688))
 	{ 
+		b_print_stop = false;
 		accept();
 	}
 	~tcp_server() { ; }
@@ -20,6 +22,9 @@ public:
 	void run()
 	{
 		boost::system::error_code ec(0, boost::system::system_category());
+#ifndef DISABLE_PRINT_COUNT
+		m_t = boost::make_shared<boost::thread>(&tcp_server::print_task_count_not_freed, this);
+#endif
 		m_io.run(ec);
 		if (ec.value() != 0)
 		{
@@ -32,6 +37,21 @@ private:
 		tcp_socket_ptr sock = boost::make_shared<tcp_socket_type>(m_io);
 		m_acceptor.async_accept(*sock, boost::bind(&tcp_server::accept_handler, this, _1, sock));
 	}
+
+#ifndef DISABLE_PRINT_COUNT
+	void print_task_count_not_freed()
+	{
+		while (true)
+		{
+			if (!b_print_stop)
+			{
+				boost::recursive_mutex::scoped_lock l(m_mutex_conn_list);
+				printf("count of tasks : %u\n", m_peer_conns_am_i_blocked.size());
+			}
+			boost::this_thread::sleep(boost::posix_time::seconds(1));
+		}
+	}
+#endif
 
 	void accept_handler(const boost::system::error_code& ec, tcp_socket_ptr sock)
 	{
@@ -48,25 +68,9 @@ private:
 
 	void connection_remove(peer_connection_ptr ptr)
 	{
-		bool bFindElement = false;
 		boost::recursive_mutex::scoped_lock l(m_mutex_conn_list);
 		for (std::list<peer_connection_ptr>::iterator it = m_peer_conns_am_i_blocked.begin(); it != m_peer_conns_am_i_blocked.end();)
 		{
-			if ((*it) == ptr)
-			{
-				bFindElement = true;		//Debug TEST only. see the `BASSERT(bFindElement)` at the end of function;
-				if ((ptr->get_pending_io_count() == 0) 
-					&& (((*it)->get_is_pingpong_task_started() && (*it)->get_is_pingpong_task_finished()) || !(*it)->get_is_pingpong_task_started())
-					&& ptr->get_is_watch_dog_finish_work()
-					)
-				{
-					LOG_INFO("connection object: %08x has been removed (IMM).", ptr.get());
-					it = m_peer_conns_am_i_blocked.erase(it);
-				}
-				else
-					++it;
-			}
-			else
 			{
 				// Check other peers
 				// if `peer-connection` is closed, and no pending io on the closed socket.
@@ -76,22 +80,21 @@ private:
 					&& (((*it)->get_is_pingpong_task_started() && (*it)->get_is_pingpong_task_finished()) || !(*it)->get_is_pingpong_task_started()))
 				{
 					// and if the `ping-pong` task which base on the connection has been finished, or not started yet (many reason cause that, such as invalid request from client, or an unexpected network error).
-					LOG_INFO("connection object: %08x has been removed (DELAY).", (*it).get());
+					LOG_INFO("connection object: %p has been removed (DELAY).", (*it).get());
 					it = m_peer_conns_am_i_blocked.erase(it);
 				}
 				else
 					++it;
 			}
 		}
-		if (!bFindElement)
-		{
-			LOG_ERROR("ERROR! The object [%p] was not Found", (ptr.get()));
-		}
-		BASSERT(bFindElement);
 	}
 private:
 	io_service m_io;
 	ip::tcp::acceptor m_acceptor;
 	std::list<peer_connection_ptr> m_peer_conns_am_i_blocked;
 	boost::recursive_mutex m_mutex_conn_list;
+	bool b_print_stop;
+#ifndef DISABLE_PRINT_COUNT
+	boost::shared_ptr<boost::thread> m_t;
+#endif
 };
