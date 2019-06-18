@@ -1,4 +1,4 @@
-// TestClient.cpp : ¶¨Òå¿ØÖÆÌ¨Ó¦ÓÃ³ÌÐòµÄÈë¿Úµã¡£
+// TestClient.cpp : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¨Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµã¡£
 //
 
 #include "stdafx.h"
@@ -61,7 +61,7 @@ void tcp_peer_connect(io_service& io)
 	cl.start();
 	while (!cl.stoped())
 	{
-		Sleep(100);
+		boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 	}
 	std::cout << "tcp client finished." << std::endl;
 }
