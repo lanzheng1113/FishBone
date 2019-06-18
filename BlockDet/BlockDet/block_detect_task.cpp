@@ -93,7 +93,8 @@ void pingpong_task::start()
 
 	m_udp_sock = boost::make_shared<ip::udp::socket>(m_io, ip::udp::endpoint(ip::udp::v4(), 0));
 	m_udp_sock->async_send_to(buffer(udp_snd_buf), ip::udp::endpoint(m_addr, m_udp_port), boost::bind(&pingpong_task::udp_send_to_handler, this, _1, _2));
-	LOG_INFO("task started.");
+	boost::system::error_code none_used;
+	LOG_INFO("task started try connect to %s, port: tcp %d, udp %d", m_addr.to_string(none_used).c_str(), m_tcp_port, m_udp_port);
 }
 
 void pingpong_task::tcp_connect_handler(const boost::system::error_code& ec)
@@ -116,7 +117,7 @@ void pingpong_task::tcp_connect_handler(const boost::system::error_code& ec)
 	}
 	else
 	{
-		LOG_INFO("pingpong_task [%p] is successful.", this);
+		LOG_INFO("pingpong_task [%p] tcp connecting is successful.", this);
 		m_tcp_result = true;
 		boost::system::error_code ec_s;
 		m_tcp_sock->shutdown(ip::tcp::socket::shutdown_both, ec_s);
