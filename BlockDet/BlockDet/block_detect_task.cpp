@@ -4,8 +4,8 @@
 #include "BlockDet.h"
 #include "block_detect_task.h"
 
-pingpong_task::pingpong_task(const peer_connection_ptr& conn, const ip::address& addr, unsigned short tcp_port, unsigned short udp_port, io_service& io, function_type_task_complete on_task_completed) : m_conn(conn),
-m_addr(addr),
+pingpong_task::pingpong_task(const ip::address& addr, unsigned short tcp_port, unsigned short udp_port, io_service& io, function_type_task_complete on_task_completed) 
+	: m_addr(addr),
 m_tcp_port(tcp_port),
 m_udp_port(udp_port),
 m_time_out(PINGPONG_TIMEOUT_DEFAULT),

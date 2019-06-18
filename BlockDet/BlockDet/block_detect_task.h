@@ -24,7 +24,7 @@ class pingpong_task :
 	public boost::noncopyable
 {
 public:
-	pingpong_task(const peer_connection_ptr& conn, const ip::address& addr, unsigned short tcp_port, 
+	pingpong_task(const ip::address& addr, unsigned short tcp_port, 
 		unsigned short udp_port, io_service& io, function_type_task_complete on_task_completed);
 
 	~pingpong_task();
@@ -65,7 +65,6 @@ private:
 	void task_timeout_handler(const boost::system::error_code& error);
 private:
 	io_service& m_io;				//use to launch a connection on tcp/udp.
-	peer_connection_ptr m_conn;		//the tcp connection "user-->this server".
 	ip::address m_addr;				//user address we are going to connect.
 	unsigned short m_tcp_port;		//
 	unsigned short m_udp_port;		//
