@@ -85,7 +85,7 @@ private:
 		}
 		if (!bFindElement)
 		{
-			LOG_ERROR("ERROR! The object [%08x] was not Found", (ptr.get()));
+			LOG_ERROR("ERROR! The object [%p] was not Found", (ptr.get()));
 		}
 		BASSERT(bFindElement);
 	}

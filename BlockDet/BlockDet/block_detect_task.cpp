@@ -111,12 +111,12 @@ void pingpong_task::tcp_connect_handler(const boost::system::error_code& ec)
 
 	if (ec)
 	{
-		LOG_INFO("pingpong_task [%08x] tcp connect failed with error:%d(%s)", this, ec.value(), ec.message().c_str());
+		LOG_INFO("pingpong_task [%p] tcp connect failed with error:%d(%s)", this, ec.value(), ec.message().c_str());
 		m_tcp_result = false;
 	}
 	else
 	{
-		LOG_INFO("pingpong_task [%08x] is successful.", this);
+		LOG_INFO("pingpong_task [%p] is successful.", this);
 		m_tcp_result = true;
 		boost::system::error_code ec_s;
 		m_tcp_sock->shutdown(ip::tcp::socket::shutdown_both, ec_s);
@@ -144,14 +144,14 @@ void pingpong_task::udp_send_to_handler(const boost::system::error_code& error, 
 
 	if (error)
 	{
-		LOG_INFO("pingpong_task [%08x] udp send failed with error:%d(%s)", this, error.value(), error.message().c_str());
+		LOG_INFO("pingpong_task [%p] udp send failed with error:%d(%s)", this, error.value(), error.message().c_str());
 		udp_close(false);
 		return;
 	}
 
 	if (bytes_transferred != 3)
 	{
-		LOG_INFO("pingpong_task [%08x] udp send failed because sent bytes is wrong. expert 3 sent %d", this, bytes_transferred);
+		LOG_INFO("pingpong_task [%p] udp send failed because sent bytes is wrong. expert 3 sent %d", this, bytes_transferred);
 		udp_close(false);
 		return;
 	}
@@ -164,19 +164,19 @@ void pingpong_task::udp_rcv_handler(const boost::system::error_code& error, /* R
 	boost::recursive_mutex::scoped_lock l(m_mutex);
 	if (error)
 	{
-		LOG_INFO("pingpong_task [%08x] udp recv failed with error:%d(%s)", this, error.value(), error.message().c_str());
+		LOG_INFO("pingpong_task [%p] udp recv failed with error:%d(%s)", this, error.value(), error.message().c_str());
 		udp_close(false);
 		return;
 	}
 
 	if (bytes_transferred != 3)
 	{
-		LOG_INFO("pingpong_task [%08x] udp recv failed because sent bytes is wrong. expert 3 received %d", this, bytes_transferred);
+		LOG_INFO("pingpong_task [%p] udp recv failed because sent bytes is wrong. expert 3 received %d", this, bytes_transferred);
 		udp_close(false);
 		return;
 	}
 
-	LOG_INFO("pingpong_task [%08x] succeeded", this);
+	LOG_INFO("pingpong_task [%p] succeeded", this);
 	udp_close(true);
 }
 
@@ -215,23 +215,23 @@ void pingpong_task::task_timeout_handler(const boost::system::error_code& error)
 		// The timer was canceled for some reason,
 		// such as this task was aborted by `peer_connection` object or all task has been finished before the timer expired.
 		// No need to do anything when being canceled.
-		LOG_INFO("pingpong_task [%08x]: task timer canceled.", this);
+		LOG_INFO("pingpong_task [%p]: task timer canceled.", this);
 		return;
 	}
 
 	// timer expired in the setting time.
-	LOG_INFO("pingpong_task [%08x]: task timer expired.", this);
+	LOG_INFO("pingpong_task [%p]: task timer expired.", this);
 	m_task_timeout_timer->expires_at(boost::posix_time::pos_infin);
 	if (m_tcp_completed && m_udp_completed)
 	{
 		// All completed. We should log the situation should not happen.
 		// It seems some multi-thread conflict happened.
-		LOG_WARN("pingpong_task [%08x] It seems some multi-thread conflict happened. Because the tcp/udp task were completed, timer should be abort but not expired the timer in this case.", this);
+		LOG_WARN("pingpong_task [%p] It seems some multi-thread conflict happened. Because the tcp/udp task were completed, timer should be abort but not expired the timer in this case.", this);
 		return;
 	}
 	else
 	{
-		LOG_WARN("pingpong_task [%08x] Timer expired, aborting the task.", this);
+		LOG_WARN("pingpong_task [%p] Timer expired, aborting the task.", this);
 		abort(abort_by_timer);
 	}
 }
