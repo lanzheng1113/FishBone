@@ -7,7 +7,7 @@
 
 #define PINGPONG_TIMEOUT_DEFAULT 2000
 
-typedef boost::function<void(bool)> function_type_task_complete;
+typedef boost::function<void(bool, bool)> function_type_task_complete;
 
 using namespace boost::asio;
 

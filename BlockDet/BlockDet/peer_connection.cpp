@@ -99,7 +99,7 @@ void peer_connection::read_handler(const boost::system::error_code& error, /* Re
 		ip::tcp::endpoint ep_remote = m_sock->remote_endpoint();
 		ip::address addr = ep_remote.address();
 		LOG_INFO("[%p]The connection receiving handler data received.", this);
-		m_pingpong_task = boost::make_shared<pingpong_task>(shared_from_this(), addr, tcp_port, udp_port, m_io, boost::bind(&peer_connection::on_detect_finished, this, _1));
+		m_pingpong_task = boost::make_shared<pingpong_task>(shared_from_this(), addr, tcp_port, udp_port, m_io, boost::bind(&peer_connection::on_detect_finished, this, _1, _2));
 	}
 	else
 	{
@@ -113,17 +113,10 @@ void peer_connection::read_handler(const boost::system::error_code& error, /* Re
 	}
 }
 
-void peer_connection::on_detect_finished(bool bOk)
+void peer_connection::on_detect_finished(bool bTCP_OK, bool bUDP_OK)
 {
-	LOG_INFO("[%p] Task finished. the result is %s", this, bOk ? "successful" : "failed");
-	if (bOk)
-	{
-		send_ok();
-	}
-	else
-	{
-		send_no();
-	}
+	LOG_INFO("[%p] Task finished. the result is TCP:%s and UDP:%s", this, bTCP_OK ? "successful" : "failed", bUDP_OK ? "successful" : "failed");
+	send_ack(bTCP_OK, bUDP_OK);
 	m_pingpong_task_finished = true;
 }
 
@@ -165,7 +158,7 @@ void peer_connection::write_handler(const boost::system::error_code& error, /* R
 	}
 }
 
-void peer_connection::send_ok()
+void peer_connection::send_ack(bool bOkTCP, bool bOkUDP)
 {
 	if (m_closed)
 	{
@@ -175,35 +168,23 @@ void peer_connection::send_ok()
 	// 		struct reply
 	// 		{
 	// 			unsigned short length;
-	// 			unsigned char reply_code;
+	// 			unsigned char reply_code; 
 	// 		};
+	unsigned char reply_code = 0;	//0000 0000(2)
+	if (bOkTCP)
+	{
+		reply_code |= 1;	//0000 0001(2)
+	}
+	if (bOkUDP)
+	{
+		reply_code |= 2;    //0000 0010(2)
+	}
 	m_send_buffer[0] = 0;
 	m_send_buffer[1] = 1;
-	m_send_buffer[2] = 0;
+	m_send_buffer[2] = reply_code;
 	m_sock->async_send(boost::asio::buffer(m_send_buffer), boost::bind(&peer_connection::write_handler, this, _1, _2));
 	pending_io_count++;
 	LOG_INFO("[%p]The `ACK-Yes` is sending.", this);
-	return;
-}
-
-void peer_connection::send_no()
-{
-	if (m_closed)
-	{
-		LOG_INFO("[s:%u]The connection had been closed, abort sending `ACK-No`", (unsigned int)m_sock->native_handle());
-		return;
-	}
-	// 		struct reply
-	// 		{
-	// 			unsigned short length;
-	// 			unsigned char reply_code;
-	// 		};
-	m_send_buffer[0] = 0;
-	m_send_buffer[1] = 1;
-	m_send_buffer[2] = 1;
-	m_sock->async_send(boost::asio::buffer(m_send_buffer), boost::bind(&peer_connection::write_handler, this, _1, _2));
-	pending_io_count++;
-	LOG_INFO("[s:%u]The `ACK-No` is sending.", (unsigned int)m_sock->native_handle());
 	return;
 }
 

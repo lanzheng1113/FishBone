@@ -66,16 +66,14 @@ protected:
 		std::size_t bytes_transferred           // Number of bytes read.
 		);
 
-	void on_detect_finished(bool bOk);
+	void on_detect_finished(bool bOkTCP, bool bOkUDP);
 
 	void write_handler(
 		const boost::system::error_code& error, // Result of operation.
 		std::size_t bytes_transferred           // Number of bytes sent.
 		);
 
-	void send_ok();
-
-	void send_no();
+	void send_ack(bool bOkTCP, bool bOkUDP);
 private:
 	// Make sure it would be called.
 	void shutdown_and_close(PeerCloseByWhom w);

@@ -205,7 +205,7 @@ void pingpong_task::check_notify()
 		m_task_timeout_timer->cancel();
 		m_is_notified = true;
 		LOG_INFO("Notify the peer-connection object that our work has finished.");
-		m_on_all_task_completed(m_tcp_result && m_udp_result);
+		m_on_all_task_completed(m_tcp_result, m_udp_result);
 	}
 }
 
