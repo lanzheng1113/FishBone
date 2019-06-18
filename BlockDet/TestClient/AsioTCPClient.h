@@ -61,7 +61,11 @@ private:
 
 		if (bytes_transferred == 3)
 		{
-			std::cout << "We have received the respond.Socket is closing now." << std::endl;
+			std::cout << "We have received the respond." << std::endl;
+			unsigned char reply_code = m_buf[2];
+			std::cout << "TCP:" << ((reply_code & 0x01) == 0 ? "Failed." : "Succeeded.") << std::endl;
+			std::cout << "UDP:" << ((reply_code & 0x02) == 0 ? "Failed." : "Succeeded.") << std::endl;
+			std::cout << "Socket is closing now." << std::endl;
 			close();
 		}
 		else
