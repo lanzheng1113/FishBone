@@ -94,19 +94,22 @@ private:
 	ip::tcp::acceptor m_acceptor;
 };
 
-boost::shared_ptr<CAsioTCPClient> cc;
+boost::shared_ptr<CAsioTCPClient> cc[99];
 
 void resolve_handler(const boost::system::error_code &ec, boost::asio::ip::tcp::resolver::iterator it, io_service& io)
 {
-	if (!ec)
+	for (int i = 0; i != 99; i++)
 	{
-		std::cout << "resolved ip: " << it->endpoint().address().to_string() << std::endl;
-		cc = boost::make_shared<CAsioTCPClient>(io, it->endpoint().address());
-		cc->start();
-	}
-	else
-	{
-		std::cout << "Failed to resolve." << std::endl;
+		if (!ec)
+		{
+			std::cout << "resolved ip: " << it->endpoint().address().to_string() << std::endl;
+			cc[i] = boost::make_shared<CAsioTCPClient>(io, it->endpoint().address(),i);
+			cc[i]->start();
+		}
+		else
+		{
+			std::cout << "Failed to resolve." << std::endl;
+		}
 	}
 }
 

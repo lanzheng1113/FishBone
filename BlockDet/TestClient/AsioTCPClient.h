@@ -10,9 +10,10 @@ class CAsioTCPClient
 	typedef ip::tcp::socket socket_type;
 	typedef boost::shared_ptr<socket_type> sock_ptr;
 public:
-	CAsioTCPClient(io_service& io, const boost::asio::ip::address& addr)
+	CAsioTCPClient(io_service& io, const boost::asio::ip::address& addr, int tid)
 		: m_ep(addr, 6688)
 		, m_io(io)
+		, m_tid(tid)
 	{
 		*(unsigned short*)m_send_buf = 9;
 		m_send_buf[2] = 'A';
@@ -39,11 +40,11 @@ private:
 	{
 		if (ec)
 		{
-			std::cout << "connect failed with error:" << ec << "(" << ec.message() << ")" << std::endl;
+			std::cout << "[" << m_tid << "]" << "connect failed with error:" << ec << "(" << ec.message() << ")" << std::endl;
 			close();
 			return;
 		}
-		std::cout << "send to:" << m_sock->remote_endpoint().address() << ":" << m_sock->remote_endpoint().port() << std::endl;
+		std::cout << "[" << m_tid << "]" << "send to:" << m_sock->remote_endpoint().address() << ":" << m_sock->remote_endpoint().port() << std::endl;
 		m_sock->async_send(buffer(m_send_buf), boost::bind(&CAsioTCPClient::send_handler, this, _1, _2));
 	}
 
@@ -54,23 +55,23 @@ private:
 	{
 		if (error || bytes_transferred == 0)
 		{
-			std::cout << "error: " << error << ". Bytes: " << bytes_transferred << std::endl;
+			std::cout << "[" << m_tid << "]" << "error: " << error << ". Bytes: " << bytes_transferred << std::endl;
 			close();
 			return;
 		}
 
 		if (bytes_transferred == 3)
 		{
-			std::cout << "We have received the respond." << std::endl;
+			std::cout << "[" << m_tid << "]" << "We have received the respond." << std::endl;
 			unsigned char reply_code = m_buf[2];
-			std::cout << "TCP:" << ((reply_code & 0x01) == 0 ? "Failed." : "Succeeded.") << std::endl;
-			std::cout << "UDP:" << ((reply_code & 0x02) == 0 ? "Failed." : "Succeeded.") << std::endl;
-			std::cout << "Socket is closing now." << std::endl;
+			std::cout << "[" << m_tid << "]" << "TCP:" << ((reply_code & 0x01) == 0 ? "Failed." : "Succeeded.") << std::endl;
+			std::cout << "[" << m_tid << "]" << "UDP:" << ((reply_code & 0x02) == 0 ? "Failed." : "Succeeded.") << std::endl;
+			std::cout << "[" << m_tid << "]" << "Socket is closing now." << std::endl;
 			close();
 		}
 		else
 		{
-			std::cout << "Failed to receive responds. " << std::endl;
+			std::cout << "[" << m_tid << "]" << "Failed to receive responds. " << std::endl;
 			close();
 		}
 	}
@@ -82,24 +83,24 @@ private:
 	{
 		if (error || bytes_transferred == 0)
 		{
-			std::cout << "error:" << error << "." << error.message() << ". Bytes:" << bytes_transferred << std::endl;
+			std::cout << "[" << m_tid << "]" << "error:" << error << "." << error.message() << ". Bytes:" << bytes_transferred << std::endl;
 			close();
 			return;
 		}
 		else
 		{
-			std::cout << "sent " << bytes_transferred << " Bytes." << std::endl;
+			std::cout << "[" << m_tid << "]" << "sent " << bytes_transferred << " Bytes." << std::endl;
 		}
 
 		if (bytes_transferred == sizeof(m_send_buf))
 		{
 			memset(m_buf, 0, sizeof(m_buf));
 			m_sock->async_receive(boost::asio::buffer(m_buf), boost::bind(&CAsioTCPClient::recv_handler, this, _1, _2));
-			std::cout << "now waiting for responds." << std::endl;
+			std::cout << "[" << m_tid << "]" << "now waiting for responds." << std::endl;
 		}
 		else
 		{
-			std::cout << "sent bytes not correct, abort!" << std::endl;
+			std::cout << "[" << m_tid << "]" << "sent bytes not correct, abort!" << std::endl;
 			close();
 			return;
 		}
@@ -111,7 +112,7 @@ private:
 		{
 			return;
 		}
-		std::cout << "Client is closing now" << std::endl;
+		std::cout << "[" << m_tid << "]" << "Client is closing now" << std::endl;
 		if (m_sock)
 		{
 			m_sock->close();
@@ -127,4 +128,5 @@ private:
 	char m_send_buf[11] = { 0 };
 	sock_ptr m_sock;
 	bool m_stoped;
+	int m_tid;
 };
