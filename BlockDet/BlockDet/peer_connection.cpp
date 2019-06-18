@@ -14,7 +14,7 @@ m_pingpong_task_finished(false),
 m_is_watch_dog_finish_work(false)
 {
 	LOG_INFO("[%p]peer_connection() with [s:%u].", this, m_sock->native_handle());
-	BTrace("~peer_connection()");
+	BTrace("peer_connection()\n");
 	m_data_max_size = AMIB_MESSAGE_LENTH;
 	m_recv_buffer.resize(m_data_max_size);
 	m_send_buffer.resize(3);
@@ -22,6 +22,7 @@ m_is_watch_dog_finish_work(false)
 	m_watch_dog_for_free_socket = boost::make_shared<boost::asio::deadline_timer>(m_io, boost::posix_time::seconds(30));
 	m_watch_dog_for_free_socket->async_wait(boost::bind(&peer_connection::watch_dog_handler, this, _1));
 }
+
 
 peer_connection::~peer_connection()
 {
@@ -36,8 +37,8 @@ void peer_connection::async_read_some()
 		LOG_INFO("[%p]Async-READ-request is not delivered, because the socket has closed.", this);
 		return;
 	}
-	m_sock->async_read_some(boost::asio::buffer(m_recv_buffer), boost::bind(&peer_connection::read_handler, this, _1, _2));
 	pending_io_count++;
+	m_sock->async_read_some(boost::asio::buffer(m_recv_buffer), boost::bind(&peer_connection::read_handler, this, _1, _2));
 	LOG_INFO("[%p]An async-READ-request is delivered, the IO count is %d now", this, pending_io_count);
 }
 
@@ -99,7 +100,7 @@ void peer_connection::read_handler(const boost::system::error_code& error, /* Re
 		ip::tcp::endpoint ep_remote = m_sock->remote_endpoint();
 		ip::address addr = ep_remote.address();
 		LOG_INFO("[%p]The connection receiving handler data received.", this);
-		m_pingpong_task = boost::make_shared<pingpong_task>(shared_from_this(), addr, tcp_port, udp_port, m_io, boost::bind(&peer_connection::on_detect_finished, this, _1, _2));
+		m_pingpong_task = boost::make_shared<pingpong_task>(addr, tcp_port, udp_port, m_io, boost::bind(&peer_connection::on_detect_finished, this, _1, _2));
 	}
 	else
 	{
@@ -108,8 +109,8 @@ void peer_connection::read_handler(const boost::system::error_code& error, /* Re
 			this, m_data_max_size, m_data_received.size());
 		m_recv_buffer.clear();
 		m_recv_buffer.resize(m_data_max_size);
-		m_sock->async_read_some(boost::asio::buffer(m_recv_buffer), boost::bind(&peer_connection::read_handler, this, _1, _2));
 		pending_io_count++;
+		m_sock->async_read_some(boost::asio::buffer(m_recv_buffer), boost::bind(&peer_connection::read_handler, this, _1, _2));
 	}
 }
 
@@ -128,7 +129,6 @@ void peer_connection::write_handler(const boost::system::error_code& error, /* R
 		LOG_ERROR("[%p] write handle return. the connecting is closed (or closing).", this);
 		return;
 	}
-
 	if (error || bytes_transferred == 0)
 	{
 		LOG_ERROR("[%p]The connection receiving handler get a error: %d [%s] bytes transferred %u",
@@ -236,3 +236,4 @@ void peer_connection::watch_dog_handler(const boost::system::error_code& error)
 	}
 	m_is_watch_dog_finish_work = true;
 }
+
