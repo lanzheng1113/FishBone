@@ -84,7 +84,7 @@ void pingpong_task::start()
 	m_start_time = time(NULL);
 
 	//m_task_timeout_timer will be expired in 3 seconds and the expired_callback will be called if expired.
-	m_task_timeout_timer = boost::make_shared<boost::asio::deadline_timer>(m_io, boost::posix_time::seconds(10));
+	m_task_timeout_timer = boost::make_shared<boost::asio::deadline_timer>(m_io, boost::posix_time::milliseconds(m_time_out));
 	m_task_timeout_timer->async_wait(boost::bind(&pingpong_task::task_timeout_handler, this, _1));
 
 	m_tcp_sock = boost::make_shared<ip::tcp::socket>(m_io);
