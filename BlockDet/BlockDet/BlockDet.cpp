@@ -8,6 +8,8 @@
 #include <sstream>
 #endif
 
+tcp_server* g_ptr_tcp_server = NULL;
+
 #ifdef _WIN32
 #include <DbgHelp.h>
 #pragma comment(lib, "DbgHelp.lib")
@@ -32,13 +34,27 @@ LONG WINAPI DumpMiniDump(PEXCEPTION_POINTERS excpInfo) {
 
     return EXCEPTION_EXECUTE_HANDLER;
 }
+#else
+#include "signal.h"
+void stop_server()
+{
+    if (g_ptr_tcp_server)
+        g_ptr_tcp_server->stop();
+}
+
+void signal_fun(int signo)
+{
+    printf("got terminate signal%d!\n",signo);
+    stop_server();
+}
 #endif // _WIN32
 
 int main() {
 #ifdef _WIN32
     SetUnhandledExceptionFilter(DumpMiniDump);
+#else
+    signal(SIGINT, signal_fun);
 #endif
-
 #ifdef LOG_ENABLED
     DateTime dt;
     std::stringstream ss;
@@ -46,12 +62,14 @@ int main() {
     Logger::getInstance()->setLogFileName(ss.str());
 #endif // #ifdef LOG_ENABLED
 
-    tcp_server s;
+    g_ptr_tcp_server = new tcp_server();
     try {
-        s.run();
+        printf("Start the pingpong server\n");
+        g_ptr_tcp_server->run();
     } catch (std::exception& e) {
-        printf("error: %s", e.what());
+        printf("Catch an error in the server runingrr: %s\n", e.what());
     }
-
+    printf("The server has quit.\n");
+    delete g_ptr_tcp_server;
     return 0;
 }
