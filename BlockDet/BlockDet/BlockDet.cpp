@@ -1,9 +1,7 @@
-// BlockDet.cpp : �������̨Ӧ�ó������ڵ㡣
-//
-
 #include "stdafx.h"
 #include "BlockDet.h"
 #include "tcp_server.h"
+
 #ifdef LOG_ENABLED
 #include "util/Path.h"
 #include "util/DateTime.h"
@@ -19,20 +17,18 @@ LONG WINAPI DumpMiniDump(PEXCEPTION_POINTERS excpInfo) {
             GENERIC_READ | GENERIC_WRITE,
             0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
-    MINIDUMP_EXCEPTION_INFORMATION eInfo;
-    eInfo.ThreadId = GetCurrentThreadId();
-    eInfo.ExceptionPointers = excpInfo;
-    eInfo.ClientPointers = FALSE;
-    MiniDumpWriteDump(
-            GetCurrentProcess(),
-            GetCurrentProcessId(),
-            hFile,
-            MiniDumpNormal,
-            excpInfo ? &eInfo : NULL,
-            NULL,
-            NULL);
-
-    CloseHandle(hFile);
+	MINIDUMP_EXCEPTION_INFORMATION eInfo;
+	eInfo.ThreadId = GetCurrentThreadId();
+	eInfo.ExceptionPointers = excpInfo;
+	eInfo.ClientPointers = FALSE;
+	MiniDumpWriteDump(
+		GetCurrentProcess(),
+		GetCurrentProcessId(),
+		hFile,
+		MiniDumpNormal,
+		excpInfo ? &eInfo : NULL,
+		NULL,
+		NULL);
 
     return EXCEPTION_EXECUTE_HANDLER;
 }
