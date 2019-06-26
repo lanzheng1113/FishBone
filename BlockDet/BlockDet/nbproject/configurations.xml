@@ -6,6 +6,7 @@
       <itemPath>block_detect_task.h</itemPath>
       <itemPath>peer_connection.h</itemPath>
       <itemPath>stdafx.h</itemPath>
+      <itemPath>targetver.h</itemPath>
       <itemPath>tcp_server.h</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles" displayName="源文件" projectFiles="true">
@@ -26,7 +27,6 @@
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
-    <itemPath>targetver.h</itemPath>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
